@@ -1,0 +1,174 @@
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --primary: #2459d3;
+  --primary-dark: #1a46aa;
+  --danger: #ba1f33;
+  --text: #1e2430;
+  --muted: #687386;
+  --border: #dde3ee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem 2rem;
+}
+
+.hero {
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 {
+  margin-bottom: 0.3rem;
+}
+
+.hero p {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(16, 29, 59, 0.06);
+  margin-bottom: 1rem;
+}
+
+.team-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+label {
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+input,
+button {
+  font: inherit;
+}
+
+input {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--primary-dark);
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+.score-buttons {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.score-buttons p {
+  margin: 0;
+  margin-right: 0.25rem;
+  color: var(--muted);
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+}
+
+th,
+td {
+  text-align: left;
+  border-top: 1px solid var(--border);
+  padding: 0.65rem 0.5rem;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.empty {
+  margin-top: 1rem;
+  color: var(--muted);
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    border-top: 1px solid var(--border);
+    padding: 0.6rem 0;
+  }
+
+  td {
+    border: none;
+    padding: 0.35rem 0;
+  }
+
+  .actions {
+    margin-top: 0.4rem;
+  }
+}

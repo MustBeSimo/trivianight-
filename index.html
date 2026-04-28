@@ -3,69 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trivia Night Scoreboard</title>
+  <title>Trivia Night · Live Scoreboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="bg-blob blob-1" aria-hidden="true"></div>
+  <div class="bg-blob blob-2" aria-hidden="true"></div>
+  <div class="bg-blob blob-3" aria-hidden="true"></div>
+
   <main class="container">
     <header class="hero">
-      <h1>Trivia Night Scoreboard</h1>
-      <p>Track every team and update scores live during the game.</p>
+      <div class="eyebrow">
+        <span class="dot"></span>
+        Live · <span id="team-count">0</span> teams in play
+      </div>
+      <h1>Trivia<br/><span class="hero-accent">Night.</span></h1>
+      <p>Crank the chaos. Tap a team's buttons to score — every team controls its own points, no more mix-ups.</p>
     </header>
 
-    <section class="card controls">
+    <section class="card add-card">
       <form id="team-form" class="team-form" autocomplete="off">
-        <label>
-          Team name
-          <input id="team-name" type="text" placeholder="e.g., Brainiacs" required />
-        </label>
-        <button type="submit">Add team</button>
+        <div class="input-wrap">
+          <span class="input-icon">+</span>
+          <input id="team-name" type="text" placeholder="Add a team — e.g. Brainiacs" required maxlength="40" />
+        </div>
+        <button type="submit" class="btn btn-primary">Add team</button>
       </form>
-
-      <div class="score-buttons" aria-label="Score quick add">
-        <p>Quick score update:</p>
-        <button data-points="1" type="button">+1</button>
-        <button data-points="2" type="button">+2</button>
-        <button data-points="5" type="button">+5</button>
-        <button data-points="-1" type="button">-1</button>
-      </div>
     </section>
 
-    <section class="card">
-      <div class="table-header">
+    <section class="standings">
+      <div class="standings-header">
         <h2>Standings</h2>
-        <button id="reset-scores" type="button" class="danger">Reset all</button>
+        <button id="reset-scores" type="button" class="btn btn-ghost">Reset scores</button>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Team</th>
-            <th>Score</th>
-            <th>Update</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="teams-table-body"></tbody>
-      </table>
-      <p id="empty-state" class="empty">No teams yet. Add one to start the game.</p>
+
+      <div id="teams-grid" class="teams-grid"></div>
+
+      <p id="empty-state" class="empty">
+        <span class="empty-emoji">🎯</span>
+        No teams yet. Add one above to start the chaos.
+      </p>
     </section>
+
+    <footer class="foot">Built for trivia nights · scores saved locally</footer>
   </main>
 
-  <template id="team-row-template">
-    <tr>
-      <td data-field="rank"></td>
-      <td data-field="name"></td>
-      <td data-field="score"></td>
-      <td>
-        <input data-field="custom-points" type="number" value="1" aria-label="points" />
-      </td>
-      <td class="actions">
-        <button data-action="add" type="button">Add</button>
-        <button data-action="subtract" type="button">Subtract</button>
-        <button data-action="remove" type="button" class="danger">Remove</button>
-      </td>
-    </tr>
+  <template id="team-card-template">
+    <article class="team-card">
+      <div class="team-card-top">
+        <div class="rank">
+          <span class="rank-medal" data-field="medal"></span>
+          <span class="rank-num" data-field="rank"></span>
+        </div>
+        <button data-action="remove" type="button" class="icon-btn" aria-label="Remove team">×</button>
+      </div>
+
+      <h3 class="team-name" data-field="name"></h3>
+
+      <div class="score-display">
+        <span class="score-num" data-field="score">0</span>
+        <span class="score-label">points</span>
+      </div>
+
+      <div class="quick-row">
+        <button data-action="quick" data-points="1" type="button" class="chip chip-pos">+1</button>
+        <button data-action="quick" data-points="2" type="button" class="chip chip-pos">+2</button>
+        <button data-action="quick" data-points="5" type="button" class="chip chip-pos">+5</button>
+        <button data-action="quick" data-points="-1" type="button" class="chip chip-neg">−1</button>
+      </div>
+
+      <div class="custom-row">
+        <input data-field="custom-points" type="number" value="1" min="1" aria-label="custom points" />
+        <button data-action="add" type="button" class="btn btn-sm btn-pos">Add</button>
+        <button data-action="subtract" type="button" class="btn btn-sm btn-neg">Subtract</button>
+      </div>
+    </article>
   </template>
 
   <script src="script.js"></script>

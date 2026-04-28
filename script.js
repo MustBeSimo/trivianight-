@@ -1,102 +1,110 @@
 const teamForm = document.getElementById('team-form');
 const teamNameInput = document.getElementById('team-name');
-const teamsTableBody = document.getElementById('teams-table-body');
-const teamRowTemplate = document.getElementById('team-row-template');
+const teamsGrid = document.getElementById('teams-grid');
+const teamCardTemplate = document.getElementById('team-card-template');
 const emptyState = document.getElementById('empty-state');
 const resetScoresButton = document.getElementById('reset-scores');
-const quickButtons = [...document.querySelectorAll('.score-buttons button')];
+const teamCountEl = document.getElementById('team-count');
+
+const STORAGE_KEY = 'trivia-night-teams';
+const MEDALS = ['🥇', '🥈', '🥉'];
 
 let teams = loadTeams();
-let selectedTeamId = teams[0]?.id ?? null;
+const customPointsByTeam = new Map();
 
 renderTeams();
 
 teamForm.addEventListener('submit', (event) => {
   event.preventDefault();
-
   const name = teamNameInput.value.trim();
   if (!name) return;
 
-  const team = {
+  teams.push({
     id: crypto.randomUUID(),
     name,
     score: 0,
-  };
-
-  teams.push(team);
-  selectedTeamId = team.id;
+  });
   teamNameInput.value = '';
   persistAndRender();
 });
 
 resetScoresButton.addEventListener('click', () => {
+  if (teams.length === 0) return;
+  if (!confirm('Reset every team to 0 points?')) return;
   teams = teams.map((team) => ({ ...team, score: 0 }));
   persistAndRender();
 });
 
-quickButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    if (!selectedTeamId) return;
+teamsGrid.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
 
-    const points = Number(button.dataset.points);
-    updateScore(selectedTeamId, points);
-  });
-});
-
-teamsTableBody.addEventListener('click', (event) => {
-  const actionButton = event.target.closest('button[data-action]');
-  if (!actionButton) return;
-
-  const row = actionButton.closest('tr');
-  const teamId = row?.dataset.teamId;
+  const card = button.closest('.team-card');
+  const teamId = card?.dataset.teamId;
   if (!teamId) return;
 
-  selectedTeamId = teamId;
+  const action = button.dataset.action;
 
-  if (actionButton.dataset.action === 'remove') {
-    teams = teams.filter((team) => team.id !== teamId);
-    if (selectedTeamId === teamId) {
-      selectedTeamId = teams[0]?.id ?? null;
-    }
+  if (action === 'remove') {
+    const team = teams.find((t) => t.id === teamId);
+    if (team && !confirm(`Remove "${team.name}"?`)) return;
+    teams = teams.filter((t) => t.id !== teamId);
+    customPointsByTeam.delete(teamId);
     persistAndRender();
     return;
   }
 
-  const pointsInput = row.querySelector('[data-field="custom-points"]');
-  const points = Math.abs(Number(pointsInput?.value || 0));
-  if (!points) return;
+  if (action === 'quick') {
+    const points = Number(button.dataset.points);
+    updateScore(teamId, points, card);
+    return;
+  }
 
-  const delta = actionButton.dataset.action === 'add' ? points : -points;
-  updateScore(teamId, delta);
+  if (action === 'add' || action === 'subtract') {
+    const input = card.querySelector('[data-field="custom-points"]');
+    const raw = Math.abs(Number(input?.value || 0));
+    if (!raw) return;
+    const delta = action === 'add' ? raw : -raw;
+    updateScore(teamId, delta, card);
+  }
 });
 
-teamsTableBody.addEventListener('click', (event) => {
-  const row = event.target.closest('tr');
-  if (!row?.dataset.teamId) return;
-  selectedTeamId = row.dataset.teamId;
-  renderTeams();
+teamsGrid.addEventListener('input', (event) => {
+  const input = event.target.closest('[data-field="custom-points"]');
+  if (!input) return;
+  const card = input.closest('.team-card');
+  const teamId = card?.dataset.teamId;
+  if (!teamId) return;
+  customPointsByTeam.set(teamId, input.value);
 });
 
-function updateScore(teamId, delta) {
-  teams = teams.map((team) =>
-    team.id === teamId ? { ...team, score: team.score + delta } : team,
-  );
+function updateScore(teamId, delta, card) {
+  const team = teams.find((t) => t.id === teamId);
+  if (!team) return;
+  team.score += delta;
+  pulseCard(card, delta);
   persistAndRender();
 }
 
+function pulseCard(card, delta) {
+  if (!card) return;
+  card.classList.remove('pulse-up', 'pulse-down');
+  void card.offsetWidth;
+  card.classList.add(delta >= 0 ? 'pulse-up' : 'pulse-down');
+}
+
 function persistAndRender() {
-  localStorage.setItem('trivia-night-teams', JSON.stringify(teams));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(teams));
   renderTeams();
 }
 
 function loadTeams() {
-  const saved = localStorage.getItem('trivia-night-teams');
+  const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return [];
-
   try {
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed)
-      ? parsed.filter((team) => team && team.id && team.name)
+      ? parsed.filter((t) => t && t.id && t.name && typeof t.score === 'number')
       : [];
   } catch {
     return [];
@@ -104,25 +112,35 @@ function loadTeams() {
 }
 
 function renderTeams() {
-  const ranked = [...teams].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const ranked = [...teams].sort(
+    (a, b) => b.score - a.score || a.name.localeCompare(b.name),
+  );
 
-  teamsTableBody.innerHTML = '';
+  teamCountEl.textContent = String(teams.length);
+  emptyState.classList.toggle('hidden', ranked.length > 0);
+
+  teamsGrid.innerHTML = '';
+  const topScore = ranked[0]?.score ?? 0;
 
   ranked.forEach((team, index) => {
-    const fragment = teamRowTemplate.content.cloneNode(true);
-    const row = fragment.querySelector('tr');
+    const fragment = teamCardTemplate.content.cloneNode(true);
+    const card = fragment.querySelector('.team-card');
 
-    row.dataset.teamId = team.id;
-    if (team.id === selectedTeamId) {
-      row.style.background = '#edf2ff';
+    card.dataset.teamId = team.id;
+    card.dataset.rank = String(index + 1);
+    if (index < 3) card.classList.add(`rank-${index + 1}`);
+    if (team.score === topScore && team.score > 0) card.classList.add('is-leader');
+
+    card.querySelector('[data-field="rank"]').textContent = `#${index + 1}`;
+    card.querySelector('[data-field="medal"]').textContent = MEDALS[index] ?? '';
+    card.querySelector('[data-field="name"]').textContent = team.name;
+    card.querySelector('[data-field="score"]').textContent = String(team.score);
+
+    const customInput = card.querySelector('[data-field="custom-points"]');
+    if (customPointsByTeam.has(team.id)) {
+      customInput.value = customPointsByTeam.get(team.id);
     }
 
-    row.querySelector('[data-field="rank"]').textContent = String(index + 1);
-    row.querySelector('[data-field="name"]').textContent = team.name;
-    row.querySelector('[data-field="score"]').textContent = String(team.score);
-
-    teamsTableBody.appendChild(fragment);
+    teamsGrid.appendChild(fragment);
   });
-
-  emptyState.classList.toggle('hidden', ranked.length > 0);
 }
